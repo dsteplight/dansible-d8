@@ -101,20 +101,33 @@
       mode: 0644
     notify: restart apache2
 
-  - name: a2ensite {{ domain }}
-    command: a2ensite {{ domain }}
-    args:
-      creates: /etc/apache2/sites-enabled/{{ domain }}.conf
-    notify:
-      - restart apache2
+  - name: Symlink Drupal virtualhost to sites-enabled
+    file: 
+      src: "/etc/apache2/sites-available/{{ domain }}.conf" 
+      dest: /etc/apache2/sites-enabled/{{ domain }}.conf
+      state: link
+    notify: restart apache2
+
+  - name: Remove default virtualhost file
+    file: 
+      path: "/etc/apache2/sites-enabled/000-default.conf" 
+      state: absent
+    notify: restart apache2
+
+#  - name: a2ensite {{ domain }}
+#    command: a2ensite {{ domain }}
+#    args:
+#      creates: /etc/apache2/sites-enabled/{{ domain }}.conf
+#    notify:
+#      - restart apache2
 
 # Synchronize passing in extra rsync options
-  - synchronize:
-      src: /Library/WebServer/Documents/ansible-drupal
-      dest: /var/www/{{ domain }}
-      rsync_opts:
-        - "--no-motd"
-        - "--exclude=.git"
+#  - synchronize:
+#      src: /Library/WebServer/Documents/ansible-drupal
+#      dest: /var/www/{{ domain }}
+#      rsync_opts:
+#        - "--no-motd"
+#        - "--exclude=.git"
 
   handlers:
     - name: restart apache2
