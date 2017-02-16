@@ -114,21 +114,6 @@
       state: absent
     notify: restart apache2
 
-#  - name: a2ensite {{ domain }}
-#    command: a2ensite {{ domain }}
-#    args:
-#      creates: /etc/apache2/sites-enabled/{{ domain }}.conf
-#    notify:
-#      - restart apache2
-
-# Synchronize passing in extra rsync options
-#  - synchronize:
-#      src: /Library/WebServer/Documents/ansible-drupal
-#      dest: /var/www/{{ domain }}
-#      rsync_opts:
-#        - "--no-motd"
-#        - "--exclude=.git"
-
   handlers:
     - name: restart apache2
       service:
