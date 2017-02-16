@@ -1,0 +1,124 @@
+---
+- hosts: all
+  become: yes
+
+  vars_files:
+  - vars.yml
+
+  tasks:
+#  - name: Ensure NTP (for time sychronization) is installed.
+#    yum: name=ntp state-present
+#  - name: Ensure NTP is running.
+#    service: name=ntpd state=started enabled=yes
+
+  - name: install packages
+    apt: name={{ item }} update_cache=yes state=latest
+    with_items:
+      - git
+      - mcrypt
+      - nginx
+      - php5-cli
+      - php5-curl
+      - php5-fpm
+      - php5-intl
+      - php5-json
+      - php5-mcrypt
+      - php5-sqlite
+      - sqlite3
+      - mysql-server
+      - libapache2-mod-auth-mysql
+      - php5-mysql
+      - python-mysqldb
+      - apache2
+      
+  - name: Remove test DB
+    mysql_db:
+      db: test
+      state: absent
+
+  - name: Create a new database with name {{ db_name }}
+    mysql_db:
+      name: "{{ db_name }}"
+      state: present
+
+  - name: creating an user with admin priviledges
+    mysql_user:
+      name: "{{ db_user }}"
+      password: "{{db_password}}"
+      priv: "{{ db_priv }}"
+      host: "{{ db_host }}"
+      state: present
+
+
+  - name: create /var/www/ directory
+    file: dest=/var/www/ state=directory owner=www-data group=www-data mode=0700
+
+
+  - name: Download Composer Installer
+    get_url: 
+      url: https://getcomposer.org/installer
+      dest: /tmp/composer-install.php
+      mode: 0755
+
+  - name: Run Composers Installer
+    command: > 
+      php composer-install.php
+      chdir=/tmp
+      creates=/usr/local/bin/composer
+
+  - name: Move Composer into globally-accessible location
+    shell: > 
+      mv /tmp/composer.phar /usr/local/bin/composer
+      creates=/usr/local/bin/composer
+
+  - name: enabled mod_rewrite
+    apache2_module:
+      name: rewrite
+      state: present
+    notify:
+      - restart apache2
+
+  - name: apache2 listen on port {{ http_port }}
+    lineinfile: 
+      dest: /etc/apache2/ports.conf 
+      regexp: "^Listen " 
+      line: Listen {{ http_port }} 
+      state: present
+    notify:
+      - restart apache2
+
+  - name: apache2 virtualhost on port {{ http_port }}
+    lineinfile: dest="/etc/apache2/sites-available/000-default.conf" regexp="^<VirtualHost \*:" line="<VirtualHost *:{{ http_port }}>"
+    notify:
+      - restart apache2
+
+  - name: create virtual host file
+    template: 
+      src: virtualhost.conf 
+      dest: /etc/apache2/sites-available/{{ domain }}.conf
+      owner: root
+      group: root
+      mode: 0644
+    notify: restart apache2
+
+  - name: a2ensite {{ domain }}
+    command: a2ensite {{ domain }}
+    args:
+      creates: /etc/apache2/sites-enabled/{{ domain }}.conf
+    notify:
+      - restart apache2
+
+# Synchronize passing in extra rsync options
+  - synchronize:
+      src: /Library/WebServer/Documents/ansible-drupal
+      dest: /var/www/{{ domain }}
+      rsync_opts:
+        - "--no-motd"
+        - "--exclude=.git"
+
+  handlers:
+    - name: restart apache2
+      service:
+        name: apache2
+        state: restarted
+

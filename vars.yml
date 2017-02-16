@@ -1,0 +1,12 @@
+download_dir: /tmp
+solr_dir: /opt/solr
+solr_version: 6.1.0
+http_port: 8082
+domain: dansible-d8.dev
+db_name: dansible_d8_dev_db
+db_user: admin
+db_password: admin
+db_priv: '*.*:ALL,GRANT'
+db_host: localhost
+drupal_core_version: 8.6.2
+drupal_core_path: /var/www/drupal/
