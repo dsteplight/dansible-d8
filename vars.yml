@@ -10,3 +10,6 @@ db_priv: '*.*:ALL,GRANT'
 db_host: localhost
 drupal_core_version: "8.6.2"
 drupal_core_path: "/var/www/drupal-{{ drupal_core_version}}-dev"
+
+drush_path: "/usr/local/bin/drush"
+drush_version: "8.1.9"
