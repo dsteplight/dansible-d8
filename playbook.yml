@@ -178,6 +178,46 @@
     notify: restart apache2
 
 
+#  - name: Check out Drupal Core to the Apache Docroot
+#    git: 
+#      repo: http://git.drupal.org/project/drupal.git
+#      version: "{{ drupal_core_version }}"
+#      dest: "{{ drupal_core_path }}"
+
+#  - name: Go to the Docroot and install Drupal {{ drupal_core_version }} with Drush command
+#    command: chdir=/var/www/ drush dl "{{ drupal_core_version }}"
+
+  - name: Check out Drupal Core to the Apache Docroot
+    git: 
+      repo: http://git.drupal.org/project/drupal.git
+      version: "{{ drupal_core_version }}"
+      dest: "{{ drupal_core_path }}"
+
+
+  - name: Configure Drupal
+    command: > 
+      chdir={{ drupal_core_path }}
+      drush si -y --site-name="{{ drupal_site_name }}"
+      --account-name=admin
+      --account-pass=admin
+      --db-url=mysql://{{ db_user }}:{{ db_password }}@{{ db_host }}/{{ db_name }}
+      chdir={{ drupal_core_path }}
+      creates={{ drupal_core_path }}/sites/default/settings.php
+    notify: restart apache2
+
+  - name: Set permissions on settings.php
+    file:  
+      path: "{{ drupal_core_path }}/sites/default/settings.php"
+      mode: 0744
+
+  - name: Set permissions on files directory
+    file:  
+      path: "{{ drupal_core_path }}/sites/default/files"
+      mode: 0777
+      state: directory
+      recurse: yes
+
+
   handlers:
     - name: restart apache2
       service:
