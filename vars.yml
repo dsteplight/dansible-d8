@@ -10,6 +10,7 @@ db_priv: '*.*:ALL,GRANT'
 db_host: localhost
 drupal_core_version: "8.2.6"
 drupal_core_path: "/var/www/drupal-{{ drupal_core_version}}"
+drupal_site_name: "dansible d8 site name"
 
 drush_path: "/usr/local/bin/drush"
 drush_version: "8.1.9"
