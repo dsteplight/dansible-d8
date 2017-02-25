@@ -22,4 +22,10 @@ Vagrant.configure(2) do |config|
     dansible_d8.vm.hostname = "dansible-d8.dev"
     dansible_d8.vm.network  :private_network, ip: "192.168.60.5"
   end
+
+#  config.vm.synced_folder ".", "/home/vargrant/drupal", type: "rsync",
+#    rsync__exclude: ".git/",
+#    rsync__args: ["--verbose", "--rsync-path='sudo rsync'", "--archive", "--delete", "-z"]
+ # end
+
 end

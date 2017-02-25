@@ -11,6 +11,9 @@
 #  - name: Ensure NTP is running.
 #    service: name=ntpd state=started enabled=yes
 
+  - name: PHP | Install Ondrej PHP PPA
+    apt_repository: repo='ppa:ondrej/php' update_cache=yes
+
   - name: install packages
     apt: name={{ item }} update_cache=yes state=latest
     with_items:
@@ -24,6 +27,7 @@
       - php5.6-json
       - php5.6-mcrypt
       - php5.6-xml
+      - php5.6-mbstring
       - sqlite3
       - mysql-server
       - libapache2-mod-auth-mysql
@@ -178,37 +182,56 @@
     notify: restart apache2
 
 
-#  - name: Check out Drupal Core to the Apache Docroot
-#    git: 
-#      repo: http://git.drupal.org/project/drupal.git
-#      version: "{{ drupal_core_version }}"
-#      dest: "{{ drupal_core_path }}"
-
-#  - name: Go to the Docroot and install Drupal {{ drupal_core_version }} with Drush command
-#    command: chdir=/var/www/ drush dl "{{ drupal_core_version }}"
-
   - name: Check out Drupal Core to the Apache Docroot
     git: 
       repo: http://git.drupal.org/project/drupal.git
       version: "{{ drupal_core_version }}"
       dest: "{{ drupal_core_path }}"
 
+#  - name: Create Drupal fold in home directory
+#    file:
+#      path: /home/vagrant/drupal
+#      state: directory
+#      mode: 0777
 
-  - name: Configure Drupal
-    command: > 
-      chdir={{ drupal_core_path }}
-      drush si -y --site-name="{{ drupal_site_name }}"
-      --account-name=admin
-      --account-pass=admin
-      --db-url=mysql://{{ db_user }}:{{ db_password }}@{{ db_host }}/{{ db_name }}
-      chdir={{ drupal_core_path }}
-      creates={{ drupal_core_path }}/sites/default/settings.php
-    notify: restart apache2
 
-  - name: Set permissions on settings.php
-    file:  
-      path: "{{ drupal_core_path }}/sites/default/settings.php"
-      mode: 0744
+#  - name: Try Symlink to Drupal folder in /home/vagrant/
+#    file: 
+#      src: "{{ drupal_core_path }}"
+#      dest: /home/vagrant/drupal
+#      state: link
+#    notify: restart apache2
+
+#  - name: Go to the Docroot and install Drupal {{ drupal_core_version }} with Drush command
+#    command: chdir=/var/www/ drush dl "{{ drupal_core_version }}"
+
+#  - name: Check out Drupal Core to the Apache Docroot
+#    git: 
+#      repo: http://git.drupal.org/project/drupal.git
+#      version: "{{ drupal_core_version }}"
+#      dest: /home/vagrant/{{ drupal_core_version }}/
+
+
+#  - name: Configure Drupal
+#    become: yes
+#    become_user: vagrant
+#    become_method: sudo
+#    command: > 
+#      chdir=/home/vagrant/{{ drupal_core_version }}
+#      composer install
+#      drush si -y --site-name="{{ drupal_site_name }}"
+#      --account-name=admin
+#      --account-pass=admin
+#      --db-url=mysql://{{ db_user }}:{{ db_password }}@{{ db_host }}/{{ db_name }}
+#      creates=/home/vagrant/{{ drupal_core_version }}/sites/default/settings.php
+#    notify: restart apache2
+
+#     chdir={{ drupal_core_path }}
+
+#  - name: Set permissions on settings.php
+#    file:  
+#      path: "{{ drupal_core_path }}/sites/default/settings.php"
+#      mode: 0744
 
   - name: Set permissions on files directory
     file:  
